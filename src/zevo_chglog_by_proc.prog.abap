@@ -6,7 +6,7 @@ DATA gv_user TYPE cdhdr-username.
 DATA gv_objectid TYPE cdhdr-objectid.
 
 SELECTION-SCREEN BEGIN OF BLOCK b_process WITH FRAME TITLE text-t01.
-  PARAMETERS p_proc TYPE zevo_process-process AS LISTBOX VISIBLE LENGTH 45
+  PARAMETERS p_proc TYPE zevo_chglog_proc-process AS LISTBOX VISIBLE LENGTH 45
     OBLIGATORY.
 SELECTION-SCREEN END OF BLOCK b_process.
 
@@ -70,15 +70,15 @@ START-OF-SELECTION.
 FORM set_process_values.
   TYPES:
     BEGIN OF ty_process,
-      process TYPE zevo_process-process,
-      descr   TYPE zevo_process-descr,
+      process TYPE zevo_chglog_proc-process,
+      descr   TYPE zevo_chglog_proc-descr,
     END OF ty_process.
 
   DATA lt_values TYPE vrm_values.
   DATA lt_processes TYPE STANDARD TABLE OF ty_process WITH EMPTY KEY.
 
   SELECT process, descr
-    FROM zevo_process
+    FROM zevo_chglog_proc
     WHERE active = @abap_true
     ORDER BY seq, process
     INTO TABLE @lt_processes.
