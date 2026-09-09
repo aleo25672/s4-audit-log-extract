@@ -207,6 +207,11 @@ CLASS zcl_chglog_reader IMPLEMENTATION.
         ENDIF.
 
         LOOP AT lt_items ASSIGNING FIELD-SYMBOL(<ls_item>).
+          IF iv_max_rows > 0 AND lines( et_result ) >= iv_max_rows.
+            ev_truncated = abap_true.
+            RETURN.
+          ENDIF.
+
           APPEND VALUE #(
             process    = <ls_catalog>-process
             objectclas = <ls_header>-objectclas
@@ -223,11 +228,6 @@ CLASS zcl_chglog_reader IMPLEMENTATION.
             fname      = <ls_item>-fname
             value_old  = <ls_item>-f_old
             value_new  = <ls_item>-f_new ) TO et_result.
-
-          IF iv_max_rows > 0 AND lines( et_result ) >= iv_max_rows.
-            ev_truncated = abap_true.
-            RETURN.
-          ENDIF.
         ENDLOOP.
       ENDLOOP.
     ENDLOOP.
