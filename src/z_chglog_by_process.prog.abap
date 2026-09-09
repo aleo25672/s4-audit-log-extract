@@ -1,10 +1,5 @@
 REPORT z_chglog_by_process MESSAGE-ID zchglog.
 
-DATA gv_tipd1 TYPE c LENGTH 79.
-DATA gv_tipd2 TYPE c LENGTH 79.
-DATA gv_tipr1 TYPE c LENGTH 79.
-DATA gv_tipr2 TYPE c LENGTH 79.
-
 DATA gv_date TYPE cdhdr-udate.
 DATA gv_time TYPE cdhdr-utime.
 DATA gv_user TYPE cdhdr-username.
