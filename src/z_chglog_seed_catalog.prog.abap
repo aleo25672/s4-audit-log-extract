@@ -7,7 +7,7 @@ TYPES:
     descr       TYPE ztproc_chdo-descr,
     in_tcdob    TYPE abap_bool,
     seen_cdhdr  TYPE abap_bool,
-    action      TYPE c LENGTH 20,
+    action      TYPE c LENGTH 30,
   END OF ty_status.
 
 DATA gt_seed TYPE STANDARD TABLE OF ztproc_chdo WITH EMPTY KEY.

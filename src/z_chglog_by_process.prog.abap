@@ -79,7 +79,9 @@ FORM execute_report.
   DATA lt_time TYPE zcl_chglog_reader=>ty_time_range.
   DATA lt_user TYPE zcl_chglog_reader=>ty_user_range.
   DATA lt_objectid TYPE zcl_chglog_reader=>ty_objectid_range.
+  DATA lv_process TYPE zcl_chglog_reader=>ty_process.
 
+  lv_process = p_proc.
   lt_date = CORRESPONDING #( s_date[] ).
   lt_time = CORRESPONDING #( s_time[] ).
   lt_user = CORRESPONDING #( s_user[] ).
@@ -88,7 +90,7 @@ FORM execute_report.
   CREATE OBJECT lo_reader.
   lo_reader->read(
     EXPORTING
-      iv_process   = CONV #( p_proc )
+      iv_process   = lv_process
       it_date      = lt_date
       it_time      = lt_time
       it_user      = lt_user
@@ -149,7 +151,7 @@ FORM set_column_texts USING io_columns TYPE REF TO cl_salv_columns_table.
       lo_column ?= io_columns->get_column( 'OBJDESCR' ).
       lo_column->set_long_text( 'Business Object Description' ).
       lo_column->set_medium_text( 'Object Description' ).
-      lo_column->set_short_text( 'Description' ).
+      lo_column->set_short_text( 'Object' ).
 
       lo_column ?= io_columns->get_column( 'OBJECTID' ).
       lo_column->set_long_text( 'Change Document Object ID' ).
