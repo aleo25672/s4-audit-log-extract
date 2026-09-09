@@ -8,8 +8,8 @@ date/time range, and displays field-level changes in an exportable ALV.
 ## Scope
 
 - SAP S/4HANA Private Cloud, classic ABAP
-- Development package: `ZEVOVER_AXF`
-- Parent hierarchy: `ZEVOLVER` → `ZEVOLVER_MAIN` → `ZEVOVER_AXF`
+- Development package: `ZEVOLVER_AXF`
+- Parent hierarchy: `ZEVOLVER` → `ZEVOLVER_MAIN` → `ZEVOLVER_AXF`
 - Transaction: `ZCHGLOG`
 - Database change documents only; archived change documents are not read
 - No custom authorization check in this first version
@@ -29,23 +29,31 @@ The files use classic abapGit serialization.
 ## Install
 
 1. Ensure packages `ZEVOLVER` and `ZEVOLVER_MAIN` exist.
-2. In abapGit, clone this repository into package `ZEVOVER_AXF`, selecting
+2. In abapGit, clone this repository into package `ZEVOLVER_AXF`, selecting
    `ZEVOLVER_MAIN` as its superpackage if abapGit asks.
-3. Pull and activate all objects.
-4. Generate the table maintenance dialog for `ZTPROC_CHDO`: transaction `SE11`,
+3. Activate change recording before the first pull. `ZEVOLVER_AXF` is a
+   transportable package, so abapGit must record every created object in a
+   transport request. Without this, the pull stops with
+   `Change recording must be activated for package ZEVOLVER_AXF`.
+   - Create a **workbench** request in `SE09` (Create > Workbench request) if
+     you do not already have one open.
+   - In the abapGit repository view, open **Advanced > Activate Change
+     Recording** and supply that request.
+4. Pull and activate all objects.
+5. Generate the table maintenance dialog for `ZTPROC_CHDO`: transaction `SE11`,
    enter the table, then **Utilities > Table Maintenance Generator**. Use
    authorization group `&NC&`, function group `ZCHGLOG_TMG`, maintenance type
    **one step**, and let the system propose the screen number.
    This dialog is generated locally rather than shipped, because the generated
    screens and function group are specific to the target S/4 release.
-5. Run `Z_CHGLOG_SEED_CATALOG` once in each required client.
-6. Review its ALV:
+6. Run `Z_CHGLOG_SEED_CATALOG` once in each required client.
+7. Review its ALV:
    - `IN_TCDOB = X` confirms that the technical object exists in this system.
    - `SEEN_CDHDR = X` confirms that the client already contains change
      documents for that class. A blank value is not an error if no such
      document has been changed yet.
    - A seed row not found in `TCDOB` is skipped.
-7. Maintain or extend mappings with transaction `SM30`, table `ZTPROC_CHDO`.
+8. Maintain or extend mappings with transaction `SM30`, table `ZTPROC_CHDO`.
 
 ## Default catalog
 
