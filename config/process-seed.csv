@@ -1,0 +1,4 @@
+PROCESS,ACTIVE,SEQ,DESCR
+P2P,X,010,Sourcing to Payment
+O2C,X,020,Order to Cash
+R2R,X,030,Record to Report

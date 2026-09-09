@@ -4,7 +4,7 @@ CLASS zcl_chglog_reader DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-    TYPES ty_process TYPE c LENGTH 3.
+    TYPES ty_process TYPE ztprocess-process.
     TYPES ty_date_range TYPE RANGE OF cdhdr-udate.
     TYPES ty_time_range TYPE RANGE OF cdhdr-utime.
     TYPES ty_user_range TYPE RANGE OF cdhdr-username.
@@ -113,6 +113,7 @@ CLASS zcl_chglog_reader IMPLEMENTATION.
     DATA lt_items TYPE STANDARD TABLE OF cdshw WITH EMPTY KEY.
     DATA lv_date_from TYPE cdhdr-udate.
     DATA lv_date_to TYPE cdhdr-udate.
+    DATA lv_process TYPE ztprocess-process.
 
     CLEAR: et_result, ev_truncated, ev_error.
 
@@ -126,6 +127,16 @@ CLASS zcl_chglog_reader IMPLEMENTATION.
     ENDIF.
     IF iv_max_rows < 0.
       ev_error = 'Max rows cannot be negative.'.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE process
+      FROM ztprocess
+      WHERE process = @iv_process
+        AND active = @abap_true
+      INTO @lv_process.
+    IF sy-subrc <> 0.
+      ev_error = |Process { iv_process } is not active or does not exist.|.
       RETURN.
     ENDIF.
 

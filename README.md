@@ -1,9 +1,9 @@
 # SAP S/4 Change Log by Business Process
 
-ABAP utility for SAP S/4HANA Private Cloud. It maps an end-to-end process
-(Sourcing to Payment, Order to Cash, or Record to Report) to SAP change
-document object classes, reads the matching change documents for a selected
-date/time range, and displays field-level changes in an exportable ALV.
+ABAP utility for SAP S/4HANA Private Cloud. It maps configurable end-to-end
+business processes to SAP change document object classes, reads the matching
+change documents for a selected date/time range, and displays field-level
+changes in an exportable ALV.
 
 ## Scope
 
@@ -18,7 +18,8 @@ date/time range, and displays field-level changes in an exportable ALV.
 
 | Object | Purpose |
 |---|---|
-| `ZTPROC_CHDO` | Client-specific process-to-object-class customizing table |
+| `ZTPROCESS` | Client-specific configurable process catalog |
+| `ZTPROC_CHDO` | Process-to-object-class mappings |
 | `ZCL_CHGLOG_READER` | Reusable change-document reader |
 | `Z_CHGLOG_BY_PROCESS` | Selection screen and ALV report |
 | `Z_CHGLOG_SEED_CATALOG` | One-time seed and system validation utility |
@@ -50,10 +51,11 @@ The files use classic abapGit serialization.
    - In the abapGit repository view, open **Advanced > Activate Change
      Recording** and supply that request.
 4. Pull and activate all objects.
-5. Generate the table maintenance dialog for `ZTPROC_CHDO`: transaction `SE11`,
-   enter the table, then **Utilities > Table Maintenance Generator**. Use
-   authorization group `&NC&`, function group `ZCHGLOG_TMG`, maintenance type
-   **one step**, and let the system propose the screen number.
+5. Generate table maintenance dialogs for both `ZTPROCESS` and `ZTPROC_CHDO`:
+   transaction `SE11`, enter each table, then **Utilities > Table Maintenance
+   Generator**. Use authorization group `&NC&`, function group `ZCHGLOG_TMG`,
+   maintenance type **one step**, and let the system propose different screen
+   numbers for the two tables.
    This dialog is generated locally rather than shipped, because the generated
    screens and function group are specific to the target S/4 release.
 6. Run `Z_CHGLOG_SEED_CATALOG` once in each required client.
@@ -63,9 +65,14 @@ The files use classic abapGit serialization.
      documents for that class. A blank value is not an error if no such
      document has been changed yet.
    - A seed row not found in `TCDOB` is skipped.
-8. Maintain or extend mappings with transaction `SM30`, table `ZTPROC_CHDO`.
+8. Maintain processes with `SM30` table `ZTPROCESS`; maintain their object
+   mappings with `SM30` table `ZTPROC_CHDO`.
 
 ## Default catalog
+
+The seed report creates three examples in `ZTPROCESS`; they are not a fixed
+list. Any active process maintained there appears automatically in the
+`ZCHGLOG` process dropdown.
 
 | Process | Object class | Meaning |
 |---|---|---|
@@ -78,8 +85,18 @@ The files use classic abapGit serialization.
 | R2R | `BELEG` | FI accounting document |
 
 These are common SAP classes, not a universal SAP process catalog. Confirm the
-scope with MM/SD/FI process owners and verify each class in `TCDOB` and against
-known records in `CDHDR`. Add landscape-specific classes through SM30.
+scope with process owners and verify each class in `TCDOB` and against known
+records in `CDHDR`.
+
+### Add another process
+
+1. In `SM30` for `ZTPROCESS`, add a unique process key (up to 10 characters),
+   description, display sequence, and set Active.
+2. In `SM30` for `ZTPROC_CHDO`, add one or more SAP `OBJECTCLAS` rows for that
+   process, with descriptions, sequence, and Active.
+3. Start `ZCHGLOG`; the active process appears in the dropdown without a code
+   or transport change. Deactivating the process hides it while preserving its
+   mappings.
 
 ## Run
 
@@ -119,7 +136,9 @@ report.
 4. Repeat with a sales order for O2C.
 5. Set Max rows to `1`; confirm one ALV row and the truncation warning.
 6. Use a date range with no changes; confirm the no-data message.
-7. Deactivate one catalog class in SM30; confirm it is no longer read.
+7. Add a test process and mapping in SM30; confirm the new process appears in
+   the dropdown.
+8. Deactivate one catalog class in SM30; confirm it is no longer read.
 
 ## Design notes
 

@@ -6,8 +6,8 @@ DATA gv_user TYPE cdhdr-username.
 DATA gv_objectid TYPE cdhdr-objectid.
 
 SELECTION-SCREEN BEGIN OF BLOCK b_process WITH FRAME TITLE text-t01.
-  PARAMETERS p_proc TYPE c LENGTH 3 AS LISTBOX VISIBLE LENGTH 30
-    OBLIGATORY DEFAULT 'P2P'.
+  PARAMETERS p_proc TYPE ztprocess-process AS LISTBOX VISIBLE LENGTH 45
+    OBLIGATORY.
 SELECTION-SCREEN END OF BLOCK b_process.
 
 SELECTION-SCREEN BEGIN OF BLOCK b_period WITH FRAME TITLE text-t02.
@@ -50,12 +50,33 @@ START-OF-SELECTION.
 
 
 FORM set_process_values.
-  DATA lt_values TYPE vrm_values.
+  TYPES:
+    BEGIN OF ty_process,
+      process TYPE ztprocess-process,
+      descr   TYPE ztprocess-descr,
+    END OF ty_process.
 
-  lt_values = VALUE #(
-    ( key = 'P2P' text = 'P2P - Sourcing to Payment' )
-    ( key = 'O2C' text = 'O2C - Order to Cash' )
-    ( key = 'R2R' text = 'R2R - Record to Report' ) ).
+  DATA lt_values TYPE vrm_values.
+  DATA lt_processes TYPE STANDARD TABLE OF ty_process WITH EMPTY KEY.
+
+  SELECT process, descr
+    FROM ztprocess
+    WHERE active = @abap_true
+    ORDER BY seq, process
+    INTO TABLE @lt_processes.
+
+  LOOP AT lt_processes ASSIGNING FIELD-SYMBOL(<ls_process>).
+    APPEND VALUE #(
+      key = <ls_process>-process
+      text = |{ <ls_process>-process } - { <ls_process>-descr }| ) TO lt_values.
+  ENDLOOP.
+
+  IF p_proc IS INITIAL.
+    READ TABLE lt_processes INDEX 1 ASSIGNING <ls_process>.
+    IF sy-subrc = 0.
+      p_proc = <ls_process>-process.
+    ENDIF.
+  ENDIF.
 
   CALL FUNCTION 'VRM_SET_VALUES'
     EXPORTING

@@ -1,18 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <abapGit version="v1.0.0" serializer="LCL_OBJECT_TABL" serializer_version="v1.0.0">
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <DD02V>
-    <TABNAME>ZTPROC_CHDO</TABNAME>
+    <TABNAME>ZTPROCESS</TABNAME>
     <DDLANGUAGE>E</DDLANGUAGE>
     <TABCLASS>TRANSP</TABCLASS>
     <CLIDEP>X</CLIDEP>
-    <DDTEXT>Change document classes by process</DDTEXT>
+    <DDTEXT>Processes for change log extraction</DDTEXT>
     <CONTFLAG>C</CONTFLAG>
     <EXCLASS>1</EXCLASS>
    </DD02V>
    <DD09L>
-    <TABNAME>ZTPROC_CHDO</TABNAME>
+    <TABNAME>ZTPROCESS</TABNAME>
     <AS4LOCAL>A</AS4LOCAL>
     <TABKAT>0</TABKAT>
     <TABART>APPL2</TABART>
@@ -38,15 +38,7 @@
      <DATATYPE>CHAR</DATATYPE>
      <LENG>000010</LENG>
      <MASK> CHAR</MASK>
-     <DDTEXT>Business process</DDTEXT>
-    </DD03P>
-    <DD03P>
-     <FIELDNAME>OBJECTCLAS</FIELDNAME>
-     <KEYFLAG>X</KEYFLAG>
-     <ROLLNAME>CDOBJECTCL</ROLLNAME>
-     <ADMINFIELD>0</ADMINFIELD>
-     <NOTNULL>X</NOTNULL>
-     <COMPTYPE>E</COMPTYPE>
+     <DDTEXT>Process key</DDTEXT>
     </DD03P>
     <DD03P>
      <FIELDNAME>ACTIVE</FIELDNAME>
@@ -63,7 +55,7 @@
      <DATATYPE>NUMC</DATATYPE>
      <LENG>000003</LENG>
      <MASK> NUMC</MASK>
-     <DDTEXT>Processing order</DDTEXT>
+     <DDTEXT>Display order</DDTEXT>
     </DD03P>
     <DD03P>
      <FIELDNAME>DESCR</FIELDNAME>
@@ -73,7 +65,7 @@
      <DATATYPE>CHAR</DATATYPE>
      <LENG>000040</LENG>
      <MASK> CHAR</MASK>
-     <DDTEXT>Business object description</DDTEXT>
+     <DDTEXT>Process description</DDTEXT>
     </DD03P>
    </DD03P_TABLE>
   </asx:values>
