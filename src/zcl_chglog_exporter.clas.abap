@@ -146,6 +146,7 @@ CLASS zcl_chglog_exporter IMPLEMENTATION.
   METHOD write_server.
     DATA lv_file_name TYPE filename-fileextern.
     DATA lv_emergency TYPE c LENGTH 1.
+    DATA lv_message TYPE string.
 
     CLEAR: ev_file_name, ev_error.
 
@@ -177,23 +178,20 @@ CLASS zcl_chglog_exporter IMPLEMENTATION.
 
     TRY.
         OPEN DATASET lv_file_name
-          FOR OUTPUT IN TEXT MODE ENCODING UTF-8.
+          FOR OUTPUT IN TEXT MODE ENCODING UTF-8
+          MESSAGE lv_message.
         IF sy-subrc <> 0.
-          ev_error = |Could not open application-server file { lv_file_name }.|.
+          ev_error = |Could not open { lv_file_name }: { lv_message }|.
           RETURN.
         ENDIF.
 
         LOOP AT it_csv ASSIGNING FIELD-SYMBOL(<lv_line>).
           TRANSFER <lv_line> TO lv_file_name.
-          IF sy-subrc <> 0.
-            CLOSE DATASET lv_file_name.
-            ev_error = |Could not write application-server file { lv_file_name }.|.
-            RETURN.
-          ENDIF.
         ENDLOOP.
         CLOSE DATASET lv_file_name.
-      CATCH cx_sy_file_error INTO DATA(lx_file).
-        ev_error = lx_file->get_text( ).
+      CATCH cx_sy_file_access_error INTO DATA(lx_file).
+        CLOSE DATASET lv_file_name.
+        ev_error = |Could not write { lv_file_name }: { lx_file->get_text( ) }|.
         RETURN.
     ENDTRY.
 
