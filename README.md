@@ -1,176 +1,330 @@
 # SAP S/4 Change Log by Business Process
 
-ABAP utility for SAP S/4HANA Private Cloud. It maps configurable end-to-end
-business processes to SAP change document object classes, reads the matching
-change documents for a selected date/time range, and displays field-level
-changes in an exportable ALV.
+ABAP utility for SAP S/4HANA Private Cloud. You select a **configurable**
+business process and a date/time range. The report expands that process into
+SAP change-document object classes (`OBJECTCLAS`), reads the matching change
+documents, and returns field-level old/new values.
 
-## Scope
+Output can be:
 
-- SAP S/4HANA Private Cloud, classic ABAP
-- Development package: `ZEVOLVER_AXF`
-- Parent hierarchy: `ZEVOLVER` → `ZEVOLVER_MAIN` → `ZEVOLVER_AXF`
-- Transaction: `ZCHGLOG`
-- Database change documents only; archived change documents are not read
-- No custom authorization check in this first version
+- an interactive ALV
+- a local CSV file (SAP GUI save dialog)
+- a CSV file on the SAP application server, resolved through transaction `FILE`
 
-## Repository contents
+P2P, O2C, and R2R are **seed examples only**. Any process you maintain in the
+catalog appears in the selection dropdown without a code change.
 
-| Object | Purpose |
-|---|---|
-| `ZTPROCESS` | Client-specific configurable process catalog |
-| `ZTPROC_CHDO` | Process-to-object-class mappings |
-| `ZCL_CHGLOG_READER` | Reusable change-document reader |
-| `ZCL_CHGLOG_EXPORTER` | CSV formatting and local/server file output |
-| `Z_CHGLOG_BY_PROCESS` | Selection screen and ALV report |
-| `Z_CHGLOG_SEED_CATALOG` | One-time seed and system validation utility |
-| `ZCHGLOG` | Report transaction and message class |
+---
 
-The files use classic abapGit serialization.
+## What you get from GitHub
 
-## Install
+This repository is an **abapGit** source tree. It is not installed by
+running a script on your laptop. You clone it, then pull it into S/4 with
+abapGit.
 
-1. Create the packages first, in `SE21` (Package Builder). abapGit does not
-   create the target package during a pull, so it must exist beforehand.
-   Create them top-down, because each one names its parent:
-   - `ZEVOLVER` — software component `HOME`, package type **Development**, and
-     the standard `Z` transport layer of the system
-   - `ZEVOLVER_MAIN` — same settings, **Super package** `ZEVOLVER`
-   - `ZEVOLVER_AXF` — same settings, **Super package** `ZEVOLVER_MAIN`
+| Object | Type | Purpose |
+|---|---|---|
+| `ZTPROCESS` | Table | Process catalog (key, description, active, sequence) |
+| `ZTPROC_CHDO` | Table | Object classes assigned to each process |
+| `ZCL_CHGLOG_READER` | Class | Reads CDHDR/CDPOS via standard change-document FMs |
+| `ZCL_CHGLOG_EXPORTER` | Class | Builds CSV; writes local or application-server files |
+| `Z_CHGLOG_BY_PROCESS` | Report | Selection screen + ALV / file output |
+| `Z_CHGLOG_SEED_CATALOG` | Report | Inserts the three example processes and mappings |
+| `ZCHGLOG` | Transaction | Starts the extract report |
+| `ZCHGLOG` | Message class | Report messages |
 
-   If the system rejects a super package assignment (this happens when a parent
-   was created as a structure or main package), create `ZEVOLVER_AXF` as a
-   plain development package with no super package. Nesting is organizational
-   only and nothing in this code depends on it.
-2. In abapGit, clone this repository into package `ZEVOLVER_AXF`.
-3. Activate change recording before the first pull. `ZEVOLVER_AXF` is a
-   transportable package, so abapGit must record every created object in a
-   transport request. Without this, the pull stops with
-   `Change recording must be activated for package ZEVOLVER_AXF`.
-   - Create a **workbench** request in `SE09` (Create > Workbench request) if
-     you do not already have one open.
-   - In the abapGit repository view, open **Advanced > Activate Change
-     Recording** and supply that request.
-4. Pull and activate all objects.
-5. Generate table maintenance dialogs for both `ZTPROCESS` and `ZTPROC_CHDO`:
-   transaction `SE11`, enter each table, then **Utilities > Table Maintenance
-   Generator**. Use authorization group `&NC&`, function group `ZCHGLOG_TMG`,
-   maintenance type **one step**, and let the system propose different screen
-   numbers for the two tables.
-   This dialog is generated locally rather than shipped, because the generated
-   screens and function group are specific to the target S/4 release.
-6. Run `Z_CHGLOG_SEED_CATALOG` once in each required client.
-7. Review its ALV:
-   - `IN_TCDOB = X` confirms that the technical object exists in this system.
-   - `SEEN_CDHDR = X` confirms that the client already contains change
-     documents for that class. A blank value is not an error if no such
-     document has been changed yet.
-   - A seed row not found in `TCDOB` is skipped.
-8. Maintain processes with `SM30` table `ZTPROCESS`; maintain their object
-   mappings with `SM30` table `ZTPROC_CHDO`.
+---
 
-### Configure application-server output
+## 1. Get the repository from GitHub
 
-Use transaction `FILE` so the report never accepts an unrestricted physical
-server path:
+On your Mac or Linux machine:
 
-1. Create a logical path (for example `ZCHGLOG_PATH`) and assign a physical
-   directory for each relevant operating-system syntax group.
-2. Create a logical filename (for example `ZCHGLOG_CSV`) using that path.
-3. Set its physical filename to `<PARAM_1>.csv` and its data format to text.
-4. Ensure report users have `S_DATASET` authorization for the resolved path.
+```bash
+git clone https://github.com/<your-org-or-user>/s4-audit-log-extract.git
+cd s4-audit-log-extract
+```
 
-On the report selection screen choose **Write application-server CSV**, enter
-the logical filename, and use the proposed filename parameter or replace it.
-The report resolves the physical location with `FILE_GET_NAME`; it refuses the
-emergency `DIR_GLOBAL` fallback. View completed files through the corresponding
-`AL11` directory.
+If you already cloned from Cursor Origin and added GitHub as a second remote:
 
-## Default catalog
+```bash
+cd s4-audit-log-extract
+git pull origin main          # Cursor, if that is still the source of new commits
+git push github main          # publish to GitHub so SAP / abapGit can see them
+```
 
-The seed report creates three examples in `ZTPROCESS`; they are not a fixed
-list. Any active process maintained there appears automatically in the
-`ZCHGLOG` process dropdown.
+abapGit in SAP must point at the **GitHub HTTPS URL**, for example:
+
+```text
+https://github.com/<your-org-or-user>/s4-audit-log-extract.git
+```
+
+Use the `main` branch. Confirm GitHub contains these files before pulling in
+SAP:
+
+- `src/ztprocess.tabl.xml`
+- `src/ztproc_chdo.tabl.xml`
+- `src/zcl_chglog_reader.clas.abap`
+- `src/zcl_chglog_exporter.clas.abap`
+- `src/z_chglog_by_process.prog.abap`
+- `src/z_chglog_seed_catalog.prog.abap`
+
+If a new class is missing on GitHub, SAP cannot activate the report. Push
+from your laptop first, then pull in abapGit.
+
+---
+
+## 2. Prepare the S/4 system
+
+### 2.1 Create packages (`SE21`)
+
+abapGit does **not** create the target package. Create them top-down:
+
+| Package | Super package | Settings |
+|---|---|---|
+| `ZEVOLVER` | — | Software component `HOME`, type **Development**, standard `Z` transport layer |
+| `ZEVOLVER_MAIN` | `ZEVOLVER` | Same |
+| `ZEVOLVER_AXF` | `ZEVOLVER_MAIN` | Same |
+
+If SAP rejects a super-package assignment, create `ZEVOLVER_AXF` as a
+standalone development package. Nesting is organizational only.
+
+### 2.2 Create a workbench request (`SE09`)
+
+Create a **Workbench** request (not a customizing request). You need it because
+`ZEVOLVER_AXF` is transportable.
+
+### 2.3 Register the GitHub repo in abapGit
+
+1. Start abapGit (`ZABAPGIT` or `ZABAPGIT_STANDALONE`).
+2. New online repository → GitHub HTTPS URL of this repo.
+3. Package: `ZEVOLVER_AXF`.
+4. Branch: `main`.
+5. **Advanced → Activate Change Recording** and enter the workbench request.
+
+Without change recording, the first object fails with:
+
+```text
+Change recording must be activated for package ZEVOLVER_AXF
+```
+
+### 2.4 Pull and activate
+
+Pull the repository. Then activate in this order (dependency order):
+
+1. `ZTPROCESS`
+2. `ZTPROC_CHDO`
+3. `ZCL_CHGLOG_READER`
+4. `ZCL_CHGLOG_EXPORTER`
+5. `Z_CHGLOG_SEED_CATALOG`
+6. `Z_CHGLOG_BY_PROCESS`
+7. Transaction / message class `ZCHGLOG`
+
+If SAP reports `Type "ZTPROCESS" is unknown` or
+`Type "ZCL_CHGLOG_EXPORTER" is unknown`, the later object was activated
+before its dependency. Activate the missing table or class first, then retry
+the report.
+
+---
+
+## 3. Initialize the three example processes
+
+Do this **once per client** after the tables are active.
+
+Run report `Z_CHGLOG_SEED_CATALOG` (`SE38` or `SA38`).
+
+The seed is **insert-only**. Existing rows are left unchanged.
+
+### Processes it creates (`ZTPROCESS`)
+
+| Process key | Sequence | Description |
+|---|---|---|
+| `P2P` | 010 | Sourcing to Payment |
+| `O2C` | 020 | Order to Cash |
+| `R2R` | 030 | Record to Report |
+
+### Object classes it assigns (`ZTPROC_CHDO`)
 
 | Process | Object class | Meaning |
 |---|---|---|
 | P2P | `BANF` | Purchase requisition |
-| P2P | `EINKBELEG` | Purchasing document |
+| P2P | `EINKBELEG` | Purchasing document (PO) |
 | P2P | `INCOMINGINVOICE` | Incoming invoice |
 | O2C | `VERKBELEG` | Sales document |
 | O2C | `LIEFERUNG` | Delivery |
 | O2C | `FAKTBELEG` | Billing document |
 | R2R | `BELEG` | FI accounting document |
 
-These are common SAP classes, not a universal SAP process catalog. Confirm the
-scope with process owners and verify each class in `TCDOB` and against known
-records in `CDHDR`.
+### How to read the seed ALV
 
-### Add another process
+| Column | Meaning |
+|---|---|
+| `ENTITY` | `PROCESS` = row in `ZTPROCESS`; `OBJECT` = row in `ZTPROC_CHDO` |
+| `ACTION` | `Inserted`, `Already exists`, `Skipped: not in TCDOB`, or `Insert failed` |
+| `IN_TCDOB` | `X` = this SAP system defines that change-document object |
+| `SEEN_CDHDR` | `X` = this client already has change documents for that class |
 
-1. In `SM30` for `ZTPROCESS`, add a unique process key (up to 10 characters),
-   description, display sequence, and set Active.
-2. In `SM30` for `ZTPROC_CHDO`, add one or more SAP `OBJECTCLAS` rows for that
-   process, with descriptions, sequence, and Active.
-3. Start `ZCHGLOG`; the active process appears in the dropdown without a code
-   or transport change. Deactivating the process hides it while preserving its
-   mappings.
+`Skipped: not in TCDOB` is not a program error. That object class is not
+defined in this system, so the seed does not insert it. Add the correct class
+for your landscape later (section 4).
 
-## Run
+`SEEN_CDHDR` blank is also not an error. It only means nobody has changed that
+object in this client yet.
 
-Start transaction `ZCHGLOG`.
+After a successful seed, transaction `ZCHGLOG` shows P2P, O2C, and R2R in
+the process dropdown.
 
-1. Select a process.
-2. Keep the date selection narrow where practical. Date is obligatory and
-   supports standard SAP select-option intervals and exclusions.
-3. Adjust time, username, or object ID filters if needed.
-4. Set **Max rows**. The default is `10,000`; `0` means no row limit.
-5. Choose an output mode:
-   - **Display ALV** — interactive list with standard spreadsheet export
-   - **Download local CSV** — opens the SAP GUI file-save dialog and writes
-     UTF-8 CSV with a byte-order mark
-   - **Write application-server CSV** — resolves a logical filename configured
-     in transaction `FILE` and writes UTF-8 CSV on the SAP server
-6. Execute. If the row limit is reached, the selected output contains the
-   limited rows and SAP shows a truncation warning. Refine the date selection
-   or raise Max rows and rerun.
+---
 
-The max-row value applies to field-level output rows, not change-document
-headers.
+## 4. Create a new process (catalog is fully configurable)
 
-## Output
+You do **not** change ABAP to add processes. Maintain two tables.
 
-One ALV row represents one changed field:
+### 4.1 Optional: generate SM30 dialogs
 
-- Process, object class, description, object ID, change number
-- Change date/time, user, transaction
-- Change indicator, table, table key, field
-- Formatted old and new values
+Only needed if you want a maintenance UI. The seed report and `SE16N` can
+populate the tables without this.
 
-Only fields configured by the underlying SAP application for change-document
-logging can appear. Missing field history cannot be reconstructed by this
-report.
+For **each** table (`ZTPROCESS`, then `ZTPROC_CHDO`):
 
-## Verification checklist
+1. `SE11` → table name → **Utilities → Table Maintenance Generator**.
+2. Authorization group: `&NC&`.
+3. Function group: `ZCHGLOG_TMG` (create it if asked).
+4. Maintenance type: **one step**.
+5. Accept the proposed screen number. Use a **different** screen number for
+   the second table.
 
-1. Change a known purchase order in a test client.
-2. Run `ZCHGLOG` for P2P and the same date.
-3. Compare object ID, user, timestamp, field, and old/new values with
-   `RSSCD100` or the purchase order change history.
-4. Repeat with a sales order for O2C.
-5. Set Max rows to `1`; confirm one ALV row and the truncation warning.
-6. Use a date range with no changes; confirm the no-data message.
-7. Add a test process and mapping in SM30; confirm the new process appears in
-   the dropdown.
-8. Deactivate one catalog class in SM30; confirm it is no longer read.
+Do not commit the generated function group to Git. Those screens are
+release-specific.
+
+### 4.2 Add the process header
+
+Transaction `SM30` → table `ZTPROCESS` → Maintain.
+
+| Field | What to enter |
+|---|---|
+| `PROCESS` | Unique key, up to 10 characters (example: `H2R`, `PLAN2PROD`) |
+| `ACTIVE` | `X` = shown in `ZCHGLOG`; blank = hidden, mappings kept |
+| `SEQ` | Display order in the dropdown (`010`, `020`, …) |
+| `DESCR` | Label shown next to the key |
+
+Save. The process now exists but extracts nothing until you assign object
+classes.
+
+### 4.3 Assign SAP object classes
+
+Transaction `SM30` → table `ZTPROC_CHDO` → Maintain.
+
+| Field | What to enter |
+|---|---|
+| `PROCESS` | Same key as in `ZTPROCESS` |
+| `OBJECTCLAS` | SAP change-document object class (see below) |
+| `ACTIVE` | `X` to include it in extracts |
+| `SEQ` | Read order within the process |
+| `DESCR` | Business label (Purchase Order, Sales Order, …) |
+
+Restart `ZCHGLOG`. The new process appears automatically.
+
+To hide a process without deleting mappings, clear `ACTIVE` on `ZTPROCESS`.
+To stop reading one object class, clear `ACTIVE` on that `ZTPROC_CHDO` row.
+
+### 4.4 How to find the right `OBJECTCLAS`
+
+There is no standard SAP API that maps “Order to Cash” to object classes.
+You discover them in the system:
+
+1. Transaction `SCDO`, or table `TCDOB` (`SE16N`): search by table name
+   (`EKKO` → `EINKBELEG`, `VBAK` → `VERKBELEG`, and so on).
+2. Confirm real usage in `CDHDR`: filter `OBJECTCLAS` and a known document
+   number in `OBJECTID`.
+3. Enter that `OBJECTCLAS` on `ZTPROC_CHDO`.
+
+Only fields whose data elements are flagged for change documents are logged.
+Missing field history is SAP configuration, not a report defect.
+
+---
+
+## 5. Run an extract (`ZCHGLOG`)
+
+Start transaction `ZCHGLOG` (report `Z_CHGLOG_BY_PROCESS`).
+
+1. **Process** — list of active `ZTPROCESS` entries.
+2. **Date** (obligatory) — use a narrow interval. The screen defaults to
+   **today**. Historical demo data (for example 2020) will not appear unless
+   you change the date.
+3. **Time** — optional; empty means the full days covered by the date range.
+4. **Max rows** — default `10000`. `0` = no cap. If the cap is hit, results
+   are truncated and a warning is shown.
+5. **Username / Object ID** — optional extra filters.
+6. **Output**:
+   - **Display ALV** — interactive list.
+   - **Download local CSV** — SAP GUI file dialog, UTF-8 with BOM.
+   - **Write application-server CSV** — logical filename from transaction
+     `FILE` (see section 6).
+
+Execute. One output row is one changed **field** (item grain), not one
+change-document header.
+
+### If the ALV is empty but `CDHDR` has rows
+
+Check, in this order:
+
+1. Date range covers `CDHDR-UDATE` (the default is today).
+2. `ZTPROC_CHDO` has that `OBJECTCLAS` for the selected process, and `ACTIVE`
+   is set.
+3. You are on a version that passes `USERNAME = space` into
+   `CHANGEDOCUMENT_READ_HEADERS`. Older versions silently filtered to
+   `SY-UNAME` and hid other users’ changes.
+
+---
+
+## 6. Application-server files (transaction `FILE`)
+
+The report never accepts a free physical server path. Basis configures the
+allowed location.
+
+1. Transaction `FILE`.
+2. Create a logical path, for example `ZCHGLOG_PATH`, with a physical
+   directory per operating-system syntax group.
+3. Create a logical filename, for example `ZCHGLOG_CSV`.
+4. Assign the logical path.
+5. Physical filename: `<PARAM_1>.csv`.
+6. Grant `S_DATASET` for that path to report users.
+
+On the selection screen:
+
+- choose **Write application-server CSV**
+- **Logical filename** = `ZCHGLOG_CSV`
+- **Filename parameter** = value substituted for `<PARAM_1>`
+  (the report proposes `s4_changelog_<date>_<time>`)
+
+The program calls `FILE_GET_NAME` and refuses the emergency `DIR_GLOBAL`
+fallback. Browse the result in `AL11`.
+
+---
+
+## 7. Verification checklist
+
+1. Run `Z_CHGLOG_SEED_CATALOG` and confirm P2P / O2C / R2R were inserted.
+2. Start `ZCHGLOG` and confirm those three processes appear.
+3. Pick P2P and a date that exists in `CDHDR` for `EINKBELEG`.
+4. Compare a row with `RSSCD100` or the PO change history.
+5. Add a dummy process in `SM30` and confirm it appears after restarting
+   `ZCHGLOG`.
+6. Local CSV: choose **Download local CSV** and open the file.
+7. Server CSV: after `FILE` is configured, write a file and find it in `AL11`.
+
+---
 
 ## Design notes
 
-`CHANGEDOCUMENT_READ_HEADERS` narrows by object class and the safe outer date
-envelope. The reader then applies the complete date/time/user/object-ID range
-semantics in ABAP and calls `CHANGEDOCUMENT_READ_POSITIONS` for matching
-headers. This avoids an unbounded direct read of `CDPOS`.
+- Headers: `CHANGEDOCUMENT_READ_HEADERS` (object class + date envelope;
+  `USERNAME` explicitly blank so all users are included).
+- Items: `CHANGEDOCUMENT_READ_POSITIONS`.
+- Date / time / user / object-ID select-options are applied in ABAP after
+  the header read.
+- Archived change documents are not read.
+- No custom authorization object in this version; any dialog user who can
+  run `ZCHGLOG` can extract.
 
-For a future web/OData option, expose `ZCL_CHGLOG_READER` through a thin RAP or
-Gateway facade; the process catalog and field-level result model can remain
-unchanged.
+A later web/OData option can wrap `ZCL_CHGLOG_READER` without changing the
+catalog model.
