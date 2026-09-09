@@ -167,6 +167,8 @@ CLASS zcl_chglog_reader IMPLEMENTATION.
           date_of_change            = lv_date_from
           objectclass               = <ls_catalog>-objectclas
           time_of_change            = '000000'
+          " USERNAME defaults to SY-UNAME, which would hide other users' changes
+          username                  = space
           date_until                = lv_date_to
           time_until                = '235959'
           read_changedocu           = abap_false
