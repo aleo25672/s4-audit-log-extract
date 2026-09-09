@@ -19,7 +19,6 @@ date/time range, and displays field-level changes in an exportable ALV.
 | Object | Purpose |
 |---|---|
 | `ZTPROC_CHDO` | Client-specific process-to-object-class customizing table |
-| `ZVPROC_CHDO` | SM30 maintenance view definition |
 | `ZCL_CHGLOG_READER` | Reusable change-document reader |
 | `Z_CHGLOG_BY_PROCESS` | Selection screen and ALV report |
 | `Z_CHGLOG_SEED_CATALOG` | One-time seed and system validation utility |
@@ -33,10 +32,12 @@ The files use classic abapGit serialization.
 2. In abapGit, clone this repository into package `ZEVOVER_AXF`, selecting
    `ZEVOLVER_MAIN` as its superpackage if abapGit asks.
 3. Pull and activate all objects.
-4. Generate the one-step table maintenance dialog for view `ZVPROC_CHDO` in
-   function group `ZCHGLOG_TMG`, overview screen `0001`. The repository
-   includes the maintenance view and transport object; the generated screen
-   artifacts are intentionally generated in the target S/4 release.
+4. Generate the table maintenance dialog for `ZTPROC_CHDO`: transaction `SE11`,
+   enter the table, then **Utilities > Table Maintenance Generator**. Use
+   authorization group `&NC&`, function group `ZCHGLOG_TMG`, maintenance type
+   **one step**, and let the system propose the screen number.
+   This dialog is generated locally rather than shipped, because the generated
+   screens and function group are specific to the target S/4 release.
 5. Run `Z_CHGLOG_SEED_CATALOG` once in each required client.
 6. Review its ALV:
    - `IN_TCDOB = X` confirms that the technical object exists in this system.
@@ -44,7 +45,7 @@ The files use classic abapGit serialization.
      documents for that class. A blank value is not an error if no such
      document has been changed yet.
    - A seed row not found in `TCDOB` is skipped.
-7. Maintain or extend mappings with transaction `SM30`, view `ZVPROC_CHDO`.
+7. Maintain or extend mappings with transaction `SM30`, table `ZTPROC_CHDO`.
 
 ## Default catalog
 
