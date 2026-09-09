@@ -21,6 +21,7 @@ changes in an exportable ALV.
 | `ZTPROCESS` | Client-specific configurable process catalog |
 | `ZTPROC_CHDO` | Process-to-object-class mappings |
 | `ZCL_CHGLOG_READER` | Reusable change-document reader |
+| `ZCL_CHGLOG_EXPORTER` | CSV formatting and local/server file output |
 | `Z_CHGLOG_BY_PROCESS` | Selection screen and ALV report |
 | `Z_CHGLOG_SEED_CATALOG` | One-time seed and system validation utility |
 | `ZCHGLOG` | Report transaction and message class |
@@ -68,6 +69,23 @@ The files use classic abapGit serialization.
 8. Maintain processes with `SM30` table `ZTPROCESS`; maintain their object
    mappings with `SM30` table `ZTPROC_CHDO`.
 
+### Configure application-server output
+
+Use transaction `FILE` so the report never accepts an unrestricted physical
+server path:
+
+1. Create a logical path (for example `ZCHGLOG_PATH`) and assign a physical
+   directory for each relevant operating-system syntax group.
+2. Create a logical filename (for example `ZCHGLOG_CSV`) using that path.
+3. Set its physical filename to `<PARAM_1>.csv` and its data format to text.
+4. Ensure report users have `S_DATASET` authorization for the resolved path.
+
+On the report selection screen choose **Write application-server CSV**, enter
+the logical filename, and use the proposed filename parameter or replace it.
+The report resolves the physical location with `FILE_GET_NAME`; it refuses the
+emergency `DIR_GLOBAL` fallback. View completed files through the corresponding
+`AL11` directory.
+
 ## Default catalog
 
 The seed report creates three examples in `ZTPROCESS`; they are not a fixed
@@ -107,9 +125,15 @@ Start transaction `ZCHGLOG`.
    supports standard SAP select-option intervals and exclusions.
 3. Adjust time, username, or object ID filters if needed.
 4. Set **Max rows**. The default is `10,000`; `0` means no row limit.
-5. Execute. If the row limit is reached, the ALV is returned with a truncation
-   warning. Refine the date selection or raise Max rows and rerun.
-6. Use standard ALV functions to filter, sort, and export to spreadsheet/CSV.
+5. Choose an output mode:
+   - **Display ALV** — interactive list with standard spreadsheet export
+   - **Download local CSV** — opens the SAP GUI file-save dialog and writes
+     UTF-8 CSV with a byte-order mark
+   - **Write application-server CSV** — resolves a logical filename configured
+     in transaction `FILE` and writes UTF-8 CSV on the SAP server
+6. Execute. If the row limit is reached, the selected output contains the
+   limited rows and SAP shows a truncation warning. Refine the date selection
+   or raise Max rows and rerun.
 
 The max-row value applies to field-level output rows, not change-document
 headers.
