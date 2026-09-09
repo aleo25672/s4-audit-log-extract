@@ -119,6 +119,7 @@ FORM execute_report.
   DATA lv_file_name TYPE string.
   DATA lv_cancelled TYPE abap_bool.
   DATA lv_default_name TYPE string.
+  DATA lv_file_parameter TYPE zcl_chglog_exporter=>ty_file_parameter.
   DATA lt_date TYPE zcl_chglog_reader=>ty_date_range.
   DATA lt_time TYPE zcl_chglog_reader=>ty_time_range.
   DATA lt_user TYPE zcl_chglog_reader=>ty_user_range.
@@ -175,11 +176,12 @@ FORM execute_report.
         RETURN.
       ENDIF.
     ELSE.
+      lv_file_parameter = p_fparm.
       lo_exporter->write_server(
         EXPORTING
           it_csv              = lt_csv
           iv_logical_filename = p_logfil
-          iv_parameter_1      = p_fparm
+          iv_parameter_1      = lv_file_parameter
         IMPORTING
           ev_file_name        = lv_file_name
           ev_error            = lv_error ).
