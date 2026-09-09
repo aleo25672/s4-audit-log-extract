@@ -1,0 +1,8 @@
+PROCESS,OBJECTCLAS,ACTIVE,SEQ,DESCR
+P2P,BANF,X,010,Purchase Requisition
+P2P,EINKBELEG,X,020,Purchasing Document
+P2P,INCOMINGINVOICE,X,030,Incoming Invoice
+O2C,VERKBELEG,X,010,Sales Document
+O2C,LIEFERUNG,X,020,Delivery
+O2C,FAKTBELEG,X,030,Billing Document
+R2R,BELEG,X,010,FI Accounting Document
