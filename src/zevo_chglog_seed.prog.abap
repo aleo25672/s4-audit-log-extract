@@ -1,18 +1,18 @@
-REPORT z_chglog_seed_catalog.
+REPORT zevo_chglog_seed.
 
 TYPES:
   BEGIN OF ty_status,
     entity      TYPE c LENGTH 10,
-    process     TYPE ztproc_chdo-process,
-    objectclas  TYPE ztproc_chdo-objectclas,
-    descr       TYPE ztproc_chdo-descr,
+    process     TYPE zevo_proc_chdo-process,
+    objectclas  TYPE zevo_proc_chdo-objectclas,
+    descr       TYPE zevo_proc_chdo-descr,
     in_tcdob    TYPE abap_bool,
     seen_cdhdr  TYPE abap_bool,
     action      TYPE c LENGTH 30,
   END OF ty_status.
 
-DATA gt_process TYPE STANDARD TABLE OF ztprocess WITH EMPTY KEY.
-DATA gt_seed TYPE STANDARD TABLE OF ztproc_chdo WITH EMPTY KEY.
+DATA gt_process TYPE STANDARD TABLE OF zevo_process WITH EMPTY KEY.
+DATA gt_seed TYPE STANDARD TABLE OF zevo_proc_chdo WITH EMPTY KEY.
 DATA gt_status TYPE STANDARD TABLE OF ty_status WITH EMPTY KEY.
 
 START-OF-SELECTION.
@@ -51,8 +51,8 @@ ENDFORM.
 FORM validate_and_seed.
   DATA lv_tcdob_object TYPE tcdob-object.
   DATA lv_cdhdr_object TYPE cdhdr-objectclas.
-  DATA lv_existing TYPE ztproc_chdo-objectclas.
-  DATA lv_existing_process TYPE ztprocess-process.
+  DATA lv_existing TYPE zevo_proc_chdo-objectclas.
+  DATA lv_existing_process TYPE zevo_process-process.
   DATA ls_status TYPE ty_status.
 
   LOOP AT gt_process ASSIGNING FIELD-SYMBOL(<ls_process>).
@@ -61,13 +61,13 @@ FORM validate_and_seed.
     MOVE-CORRESPONDING <ls_process> TO ls_status.
 
     SELECT SINGLE process
-      FROM ztprocess
+      FROM zevo_process
       WHERE process = @<ls_process>-process
       INTO @lv_existing_process.
     IF sy-subrc = 0.
       ls_status-action = 'Already exists'.
     ELSE.
-      INSERT ztprocess FROM @<ls_process>.
+      INSERT zevo_process FROM @<ls_process>.
       IF sy-subrc = 0.
         ls_status-action = 'Inserted'.
       ELSE.
@@ -98,7 +98,7 @@ FORM validate_and_seed.
       ls_status-action = 'Skipped: not in TCDOB'.
     ELSE.
       SELECT SINGLE objectclas
-        FROM ztproc_chdo
+        FROM zevo_proc_chdo
         WHERE process = @<ls_seed>-process
           AND objectclas = @<ls_seed>-objectclas
         INTO @lv_existing.
@@ -106,7 +106,7 @@ FORM validate_and_seed.
       IF sy-subrc = 0.
         ls_status-action = 'Already exists'.
       ELSE.
-        INSERT ztproc_chdo FROM @<ls_seed>.
+        INSERT zevo_proc_chdo FROM @<ls_seed>.
         IF sy-subrc = 0.
           ls_status-action = 'Inserted'.
         ELSE.

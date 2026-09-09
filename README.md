@@ -24,14 +24,17 @@ abapGit.
 
 | Object | Type | Purpose |
 |---|---|---|
-| `ZTPROCESS` | Table | Process catalog (key, description, active, sequence) |
-| `ZTPROC_CHDO` | Table | Object classes assigned to each process |
-| `ZCL_CHGLOG_READER` | Class | Reads CDHDR/CDPOS via standard change-document FMs |
-| `ZCL_CHGLOG_EXPORTER` | Class | Builds CSV; writes local or application-server files |
-| `Z_CHGLOG_BY_PROCESS` | Report | Selection screen + ALV / file output |
-| `Z_CHGLOG_SEED_CATALOG` | Report | Inserts the three example processes and mappings |
-| `ZCHGLOG` | Transaction | Starts the extract report |
-| `ZCHGLOG` | Message class | Report messages |
+| `ZEVO_PROCESS` | Table | Process catalog (key, description, active, sequence) |
+| `ZEVO_PROC_CHDO` | Table | Object classes assigned to each process |
+| `ZCL_EVO_CHGLOG_READER` | Class | Reads CDHDR/CDPOS via standard change-document FMs |
+| `ZCL_EVO_CHGLOG_EXPORTER` | Class | Builds CSV; writes local or application-server files |
+| `ZEVO_CHGLOG_BY_PROC` | Report | Selection screen + ALV / file output |
+| `ZEVO_CHGLOG_SEED` | Report | Inserts the three example processes and mappings |
+| `ZEVO_CHGLOG` | Transaction | Starts the extract report |
+| `ZEVO_CHGLOG` | Message class | Report messages |
+
+Customer objects use prefix **`ZEVO_`** (tables, reports, transaction, messages)
+or **`ZCL_EVO_`** (classes), aligned with package `ZEVOLVER_AXF`.
 
 ---
 
@@ -61,15 +64,30 @@ https://github.com/<your-org-or-user>/s4-audit-log-extract.git
 Use the `main` branch. Confirm GitHub contains these files before pulling in
 SAP:
 
-- `src/ztprocess.tabl.xml`
-- `src/ztproc_chdo.tabl.xml`
-- `src/zcl_chglog_reader.clas.abap`
-- `src/zcl_chglog_exporter.clas.abap`
-- `src/z_chglog_by_process.prog.abap`
-- `src/z_chglog_seed_catalog.prog.abap`
+- `src/zevo_process.tabl.xml`
+- `src/zevo_proc_chdo.tabl.xml`
+- `src/zcl_evo_chglog_reader.clas.abap`
+- `src/zcl_evo_chglog_exporter.clas.abap`
+- `src/zevo_chglog_by_proc.prog.abap`
+- `src/zevo_chglog_seed.prog.abap`
 
 If a new class is missing on GitHub, SAP cannot activate the report. Push
 from your laptop first, then pull in abapGit.
+
+### If you already installed the old `Z*` names
+
+Objects were renamed to the `ZEVO_` / `ZCL_EVO_` prefix. abapGit will create
+**new** objects; it will not rename the old ones in SAP.
+
+After pulling the renamed tree:
+
+1. Activate the new objects (section 2.4).
+2. Run `ZEVO_CHGLOG_SEED` (or copy rows from `ZTPROCESS` / `ZTPROC_CHDO` into
+   `ZEVO_PROCESS` / `ZEVO_PROC_CHDO` if you already seeded).
+3. Use transaction `ZEVO_CHGLOG`.
+4. Delete the obsolete objects when you no longer need them:
+   `ZTPROCESS`, `ZTPROC_CHDO`, `ZCL_CHGLOG_READER`, `ZCL_CHGLOG_EXPORTER`,
+   `Z_CHGLOG_BY_PROCESS`, `Z_CHGLOG_SEED_CATALOG`, `ZCHGLOG`.
 
 ---
 
@@ -111,16 +129,16 @@ Change recording must be activated for package ZEVOLVER_AXF
 
 Pull the repository. Then activate in this order (dependency order):
 
-1. `ZTPROCESS`
-2. `ZTPROC_CHDO`
-3. `ZCL_CHGLOG_READER`
-4. `ZCL_CHGLOG_EXPORTER`
-5. `Z_CHGLOG_SEED_CATALOG`
-6. `Z_CHGLOG_BY_PROCESS`
-7. Transaction / message class `ZCHGLOG`
+1. `ZEVO_PROCESS`
+2. `ZEVO_PROC_CHDO`
+3. `ZCL_EVO_CHGLOG_READER`
+4. `ZCL_EVO_CHGLOG_EXPORTER`
+5. `ZEVO_CHGLOG_SEED`
+6. `ZEVO_CHGLOG_BY_PROC`
+7. Transaction / message class `ZEVO_CHGLOG`
 
-If SAP reports `Type "ZTPROCESS" is unknown` or
-`Type "ZCL_CHGLOG_EXPORTER" is unknown`, the later object was activated
+If SAP reports `Type "ZEVO_PROCESS" is unknown` or
+`Type "ZCL_EVO_CHGLOG_EXPORTER" is unknown`, the later object was activated
 before its dependency. Activate the missing table or class first, then retry
 the report.
 
@@ -130,11 +148,11 @@ the report.
 
 Do this **once per client** after the tables are active.
 
-Run report `Z_CHGLOG_SEED_CATALOG` (`SE38` or `SA38`).
+Run report `ZEVO_CHGLOG_SEED` (`SE38` or `SA38`).
 
 The seed is **insert-only**. Existing rows are left unchanged.
 
-### Processes it creates (`ZTPROCESS`)
+### Processes it creates (`ZEVO_PROCESS`)
 
 | Process key | Sequence | Description |
 |---|---|---|
@@ -142,7 +160,7 @@ The seed is **insert-only**. Existing rows are left unchanged.
 | `O2C` | 020 | Order to Cash |
 | `R2R` | 030 | Record to Report |
 
-### Object classes it assigns (`ZTPROC_CHDO`)
+### Object classes it assigns (`ZEVO_PROC_CHDO`)
 
 | Process | Object class | Meaning |
 |---|---|---|
@@ -158,7 +176,7 @@ The seed is **insert-only**. Existing rows are left unchanged.
 
 | Column | Meaning |
 |---|---|
-| `ENTITY` | `PROCESS` = row in `ZTPROCESS`; `OBJECT` = row in `ZTPROC_CHDO` |
+| `ENTITY` | `PROCESS` = row in `ZEVO_PROCESS`; `OBJECT` = row in `ZEVO_PROC_CHDO` |
 | `ACTION` | `Inserted`, `Already exists`, `Skipped: not in TCDOB`, or `Insert failed` |
 | `IN_TCDOB` | `X` = this SAP system defines that change-document object |
 | `SEEN_CDHDR` | `X` = this client already has change documents for that class |
@@ -170,7 +188,7 @@ for your landscape later (section 4).
 `SEEN_CDHDR` blank is also not an error. It only means nobody has changed that
 object in this client yet.
 
-After a successful seed, transaction `ZCHGLOG` shows P2P, O2C, and R2R in
+After a successful seed, transaction `ZEVO_CHGLOG` shows P2P, O2C, and R2R in
 the process dropdown.
 
 ---
@@ -184,11 +202,11 @@ You do **not** change ABAP to add processes. Maintain two tables.
 Only needed if you want a maintenance UI. The seed report and `SE16N` can
 populate the tables without this.
 
-For **each** table (`ZTPROCESS`, then `ZTPROC_CHDO`):
+For **each** table (`ZEVO_PROCESS`, then `ZEVO_PROC_CHDO`):
 
 1. `SE11` → table name → **Utilities → Table Maintenance Generator**.
 2. Authorization group: `&NC&`.
-3. Function group: `ZCHGLOG_TMG` (create it if asked).
+3. Function group: `ZEVO_CHGLOG_TMG` (create it if asked).
 4. Maintenance type: **one step**.
 5. Accept the proposed screen number. Use a **different** screen number for
    the second table.
@@ -198,12 +216,12 @@ release-specific.
 
 ### 4.2 Add the process header
 
-Transaction `SM30` → table `ZTPROCESS` → Maintain.
+Transaction `SM30` → table `ZEVO_PROCESS` → Maintain.
 
 | Field | What to enter |
 |---|---|
 | `PROCESS` | Unique key, up to 10 characters (example: `H2R`, `PLAN2PROD`) |
-| `ACTIVE` | `X` = shown in `ZCHGLOG`; blank = hidden, mappings kept |
+| `ACTIVE` | `X` = shown in `ZEVO_CHGLOG`; blank = hidden, mappings kept |
 | `SEQ` | Display order in the dropdown (`010`, `020`, …) |
 | `DESCR` | Label shown next to the key |
 
@@ -212,20 +230,20 @@ classes.
 
 ### 4.3 Assign SAP object classes
 
-Transaction `SM30` → table `ZTPROC_CHDO` → Maintain.
+Transaction `SM30` → table `ZEVO_PROC_CHDO` → Maintain.
 
 | Field | What to enter |
 |---|---|
-| `PROCESS` | Same key as in `ZTPROCESS` |
+| `PROCESS` | Same key as in `ZEVO_PROCESS` |
 | `OBJECTCLAS` | SAP change-document object class (see below) |
 | `ACTIVE` | `X` to include it in extracts |
 | `SEQ` | Read order within the process |
 | `DESCR` | Business label (Purchase Order, Sales Order, …) |
 
-Restart `ZCHGLOG`. The new process appears automatically.
+Restart `ZEVO_CHGLOG`. The new process appears automatically.
 
-To hide a process without deleting mappings, clear `ACTIVE` on `ZTPROCESS`.
-To stop reading one object class, clear `ACTIVE` on that `ZTPROC_CHDO` row.
+To hide a process without deleting mappings, clear `ACTIVE` on `ZEVO_PROCESS`.
+To stop reading one object class, clear `ACTIVE` on that `ZEVO_PROC_CHDO` row.
 
 ### 4.4 How to find the right `OBJECTCLAS`
 
@@ -236,18 +254,18 @@ You discover them in the system:
    (`EKKO` → `EINKBELEG`, `VBAK` → `VERKBELEG`, and so on).
 2. Confirm real usage in `CDHDR`: filter `OBJECTCLAS` and a known document
    number in `OBJECTID`.
-3. Enter that `OBJECTCLAS` on `ZTPROC_CHDO`.
+3. Enter that `OBJECTCLAS` on `ZEVO_PROC_CHDO`.
 
 Only fields whose data elements are flagged for change documents are logged.
 Missing field history is SAP configuration, not a report defect.
 
 ---
 
-## 5. Run an extract (`ZCHGLOG`)
+## 5. Run an extract (`ZEVO_CHGLOG`)
 
-Start transaction `ZCHGLOG` (report `Z_CHGLOG_BY_PROCESS`).
+Start transaction `ZEVO_CHGLOG` (report `ZEVO_CHGLOG_BY_PROC`).
 
-1. **Process** — list of active `ZTPROCESS` entries.
+1. **Process** — list of active `ZEVO_PROCESS` entries.
 2. **Date** (obligatory) — use a narrow interval. The screen defaults to
    **today**. Historical demo data (for example 2020) will not appear unless
    you change the date.
@@ -269,7 +287,7 @@ change-document header.
 Check, in this order:
 
 1. Date range covers `CDHDR-UDATE` (the default is today).
-2. `ZTPROC_CHDO` has that `OBJECTCLAS` for the selected process, and `ACTIVE`
+2. `ZEVO_PROC_CHDO` has that `OBJECTCLAS` for the selected process, and `ACTIVE`
    is set.
 3. You are on a version that passes `USERNAME = space` into
    `CHANGEDOCUMENT_READ_HEADERS`. Older versions silently filtered to
@@ -283,9 +301,9 @@ The report never accepts a free physical server path. Basis configures the
 allowed location.
 
 1. Transaction `FILE`.
-2. Create a logical path, for example `ZCHGLOG_PATH`, with a physical
+2. Create a logical path, for example `ZEVO_CHGLOG_PATH`, with a physical
    directory per operating-system syntax group.
-3. Create a logical filename, for example `ZCHGLOG_CSV`.
+3. Create a logical filename, for example `ZEVO_CHGLOG_CSV`.
 4. Assign the logical path.
 5. Physical filename: `<PARAM_1>.csv`.
 6. Grant `S_DATASET` for that path to report users.
@@ -293,7 +311,7 @@ allowed location.
 On the selection screen:
 
 - choose **Write application-server CSV**
-- **Logical filename** = `ZCHGLOG_CSV`
+- **Logical filename** = `ZEVO_CHGLOG_CSV`
 - **Filename parameter** = value substituted for `<PARAM_1>`
   (the report proposes `s4_changelog_<date>_<time>`)
 
@@ -304,12 +322,12 @@ fallback. Browse the result in `AL11`.
 
 ## 7. Verification checklist
 
-1. Run `Z_CHGLOG_SEED_CATALOG` and confirm P2P / O2C / R2R were inserted.
-2. Start `ZCHGLOG` and confirm those three processes appear.
+1. Run `ZEVO_CHGLOG_SEED` and confirm P2P / O2C / R2R were inserted.
+2. Start `ZEVO_CHGLOG` and confirm those three processes appear.
 3. Pick P2P and a date that exists in `CDHDR` for `EINKBELEG`.
 4. Compare a row with `RSSCD100` or the PO change history.
 5. Add a dummy process in `SM30` and confirm it appears after restarting
-   `ZCHGLOG`.
+   `ZEVO_CHGLOG`.
 6. Local CSV: choose **Download local CSV** and open the file.
 7. Server CSV: after `FILE` is configured, write a file and find it in `AL11`.
 
@@ -324,7 +342,7 @@ fallback. Browse the result in `AL11`.
   the header read.
 - Archived change documents are not read.
 - No custom authorization object in this version; any dialog user who can
-  run `ZCHGLOG` can extract.
+  run `ZEVO_CHGLOG` can extract.
 
-A later web/OData option can wrap `ZCL_CHGLOG_READER` without changing the
+A later web/OData option can wrap `ZCL_EVO_CHGLOG_READER` without changing the
 catalog model.

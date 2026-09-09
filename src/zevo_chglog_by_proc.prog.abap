@@ -1,4 +1,4 @@
-REPORT z_chglog_by_process MESSAGE-ID zchglog.
+REPORT zevo_chglog_by_proc MESSAGE-ID zevo_chglog.
 
 DATA gv_date TYPE cdhdr-udate.
 DATA gv_time TYPE cdhdr-utime.
@@ -6,7 +6,7 @@ DATA gv_user TYPE cdhdr-username.
 DATA gv_objectid TYPE cdhdr-objectid.
 
 SELECTION-SCREEN BEGIN OF BLOCK b_process WITH FRAME TITLE text-t01.
-  PARAMETERS p_proc TYPE ztprocess-process AS LISTBOX VISIBLE LENGTH 45
+  PARAMETERS p_proc TYPE zevo_process-process AS LISTBOX VISIBLE LENGTH 45
     OBLIGATORY.
 SELECTION-SCREEN END OF BLOCK b_process.
 
@@ -70,15 +70,15 @@ START-OF-SELECTION.
 FORM set_process_values.
   TYPES:
     BEGIN OF ty_process,
-      process TYPE ztprocess-process,
-      descr   TYPE ztprocess-descr,
+      process TYPE zevo_process-process,
+      descr   TYPE zevo_process-descr,
     END OF ty_process.
 
   DATA lt_values TYPE vrm_values.
   DATA lt_processes TYPE STANDARD TABLE OF ty_process WITH EMPTY KEY.
 
   SELECT process, descr
-    FROM ztprocess
+    FROM zevo_process
     WHERE active = @abap_true
     ORDER BY seq, process
     INTO TABLE @lt_processes.
@@ -107,24 +107,24 @@ ENDFORM.
 
 
 FORM execute_report.
-  DATA lo_reader TYPE REF TO zcl_chglog_reader.
-  DATA lt_result TYPE zcl_chglog_reader=>tt_result.
+  DATA lo_reader TYPE REF TO zcl_evo_chglog_reader.
+  DATA lt_result TYPE zcl_evo_chglog_reader=>tt_result.
   DATA lv_truncated TYPE abap_bool.
   DATA lv_error TYPE string.
   DATA lo_alv TYPE REF TO cl_salv_table.
   DATA lo_columns TYPE REF TO cl_salv_columns_table.
   DATA lv_title TYPE lvc_title.
-  DATA lo_exporter TYPE REF TO zcl_chglog_exporter.
-  DATA lt_csv TYPE zcl_chglog_exporter=>tt_csv.
+  DATA lo_exporter TYPE REF TO zcl_evo_chglog_exporter.
+  DATA lt_csv TYPE zcl_evo_chglog_exporter=>tt_csv.
   DATA lv_file_name TYPE string.
   DATA lv_cancelled TYPE abap_bool.
   DATA lv_default_name TYPE string.
-  DATA lv_file_parameter TYPE zcl_chglog_exporter=>ty_file_parameter.
-  DATA lt_date TYPE zcl_chglog_reader=>ty_date_range.
-  DATA lt_time TYPE zcl_chglog_reader=>ty_time_range.
-  DATA lt_user TYPE zcl_chglog_reader=>ty_user_range.
-  DATA lt_objectid TYPE zcl_chglog_reader=>ty_objectid_range.
-  DATA lv_process TYPE zcl_chglog_reader=>ty_process.
+  DATA lv_file_parameter TYPE zcl_evo_chglog_exporter=>ty_file_parameter.
+  DATA lt_date TYPE zcl_evo_chglog_reader=>ty_date_range.
+  DATA lt_time TYPE zcl_evo_chglog_reader=>ty_time_range.
+  DATA lt_user TYPE zcl_evo_chglog_reader=>ty_user_range.
+  DATA lt_objectid TYPE zcl_evo_chglog_reader=>ty_objectid_range.
+  DATA lv_process TYPE zcl_evo_chglog_reader=>ty_process.
 
   lv_process = p_proc.
   lt_date = CORRESPONDING #( s_date[] ).

@@ -1,4 +1,4 @@
-CLASS zcl_chglog_exporter DEFINITION
+CLASS zcl_evo_chglog_exporter DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC.
@@ -9,7 +9,7 @@ CLASS zcl_chglog_exporter DEFINITION
 
     METHODS to_csv
       IMPORTING
-        it_result     TYPE zcl_chglog_reader=>tt_result
+        it_result     TYPE zcl_evo_chglog_reader=>tt_result
       RETURNING
         VALUE(rt_csv) TYPE tt_csv.
 
@@ -40,7 +40,7 @@ CLASS zcl_chglog_exporter DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_chglog_exporter IMPLEMENTATION.
+CLASS zcl_evo_chglog_exporter IMPLEMENTATION.
   METHOD quote.
     rv_value = |{ iv_value }|.
     REPLACE ALL OCCURRENCES OF '"' IN rv_value WITH '""'.

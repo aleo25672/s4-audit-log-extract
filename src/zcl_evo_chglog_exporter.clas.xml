@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_CHGLOG_EXPORTER</CLSNAME>
+    <CLSNAME>ZCL_EVO_CHGLOG_EXPORTER</CLSNAME>
     <LANGU>E</LANGU>
     <DESCRIPT>Export change log results to CSV</DESCRIPT>
     <STATE>1</STATE>

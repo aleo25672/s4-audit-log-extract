@@ -1,10 +1,10 @@
-CLASS zcl_chglog_reader DEFINITION
+CLASS zcl_evo_chglog_reader DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-    TYPES ty_process TYPE ztprocess-process.
+    TYPES ty_process TYPE zevo_process-process.
     TYPES ty_date_range TYPE RANGE OF cdhdr-udate.
     TYPES ty_time_range TYPE RANGE OF cdhdr-utime.
     TYPES ty_user_range TYPE RANGE OF cdhdr-username.
@@ -53,7 +53,7 @@ CLASS zcl_chglog_reader DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_chglog_reader IMPLEMENTATION.
+CLASS zcl_evo_chglog_reader IMPLEMENTATION.
   METHOD get_date_bounds.
     DATA lv_found TYPE abap_bool.
     DATA lv_low TYPE cdhdr-udate.
@@ -108,12 +108,12 @@ CLASS zcl_chglog_reader IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD read.
-    DATA lt_catalog TYPE STANDARD TABLE OF ztproc_chdo WITH EMPTY KEY.
+    DATA lt_catalog TYPE STANDARD TABLE OF zevo_proc_chdo WITH EMPTY KEY.
     DATA lt_headers TYPE STANDARD TABLE OF cdhdr WITH EMPTY KEY.
     DATA lt_items TYPE STANDARD TABLE OF cdshw WITH EMPTY KEY.
     DATA lv_date_from TYPE cdhdr-udate.
     DATA lv_date_to TYPE cdhdr-udate.
-    DATA lv_process TYPE ztprocess-process.
+    DATA lv_process TYPE zevo_process-process.
 
     CLEAR: et_result, ev_truncated, ev_error.
 
@@ -131,7 +131,7 @@ CLASS zcl_chglog_reader IMPLEMENTATION.
     ENDIF.
 
     SELECT SINGLE process
-      FROM ztprocess
+      FROM zevo_process
       WHERE process = @iv_process
         AND active = @abap_true
       INTO @lv_process.
@@ -141,7 +141,7 @@ CLASS zcl_chglog_reader IMPLEMENTATION.
     ENDIF.
 
     SELECT *
-      FROM ztproc_chdo
+      FROM zevo_proc_chdo
       WHERE process = @iv_process
         AND active = @abap_true
       ORDER BY seq, objectclas
