@@ -28,9 +28,19 @@ The files use classic abapGit serialization.
 
 ## Install
 
-1. Ensure packages `ZEVOLVER` and `ZEVOLVER_MAIN` exist.
-2. In abapGit, clone this repository into package `ZEVOLVER_AXF`, selecting
-   `ZEVOLVER_MAIN` as its superpackage if abapGit asks.
+1. Create the packages first, in `SE21` (Package Builder). abapGit does not
+   create the target package during a pull, so it must exist beforehand.
+   Create them top-down, because each one names its parent:
+   - `ZEVOLVER` — software component `HOME`, package type **Development**, and
+     the standard `Z` transport layer of the system
+   - `ZEVOLVER_MAIN` — same settings, **Super package** `ZEVOLVER`
+   - `ZEVOLVER_AXF` — same settings, **Super package** `ZEVOLVER_MAIN`
+
+   If the system rejects a super package assignment (this happens when a parent
+   was created as a structure or main package), create `ZEVOLVER_AXF` as a
+   plain development package with no super package. Nesting is organizational
+   only and nothing in this code depends on it.
+2. In abapGit, clone this repository into package `ZEVOLVER_AXF`.
 3. Activate change recording before the first pull. `ZEVOLVER_AXF` is a
    transportable package, so abapGit must record every created object in a
    transport request. Without this, the pull stops with
