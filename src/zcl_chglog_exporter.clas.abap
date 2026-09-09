@@ -5,6 +5,7 @@ CLASS zcl_chglog_exporter DEFINITION
 
   PUBLIC SECTION.
     TYPES tt_csv TYPE STANDARD TABLE OF string WITH EMPTY KEY.
+    TYPES ty_file_parameter TYPE c LENGTH 60.
 
     METHODS to_csv
       IMPORTING
@@ -25,7 +26,7 @@ CLASS zcl_chglog_exporter DEFINITION
       IMPORTING
         it_csv              TYPE tt_csv
         iv_logical_filename TYPE filename-fileintern
-        iv_parameter_1      TYPE c LENGTH 60 OPTIONAL
+        iv_parameter_1      TYPE ty_file_parameter OPTIONAL
       EXPORTING
         ev_file_name        TYPE string
         ev_error            TYPE string.
