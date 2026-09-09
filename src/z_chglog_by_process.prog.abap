@@ -1,9 +1,9 @@
 REPORT z_chglog_by_process MESSAGE-ID zchglog.
 
-DATA gv_tip_date_1 TYPE c LENGTH 79.
-DATA gv_tip_date_2 TYPE c LENGTH 79.
-DATA gv_tip_rows_1 TYPE c LENGTH 79.
-DATA gv_tip_rows_2 TYPE c LENGTH 79.
+DATA gv_tipd1 TYPE c LENGTH 79.
+DATA gv_tipd2 TYPE c LENGTH 79.
+DATA gv_tipr1 TYPE c LENGTH 79.
+DATA gv_tipr2 TYPE c LENGTH 79.
 
 DATA gv_date TYPE cdhdr-udate.
 DATA gv_time TYPE cdhdr-utime.
@@ -16,15 +16,15 @@ SELECTION-SCREEN BEGIN OF BLOCK b_process WITH FRAME TITLE text-t01.
 SELECTION-SCREEN END OF BLOCK b_process.
 
 SELECTION-SCREEN BEGIN OF BLOCK b_period WITH FRAME TITLE text-t02.
-  SELECTION-SCREEN COMMENT /1(79) gv_tip_date_1.
-  SELECTION-SCREEN COMMENT /1(79) gv_tip_date_2.
+  SELECTION-SCREEN COMMENT /1(79) gv_tipd1.
+  SELECTION-SCREEN COMMENT /1(79) gv_tipd2.
   SELECT-OPTIONS s_date FOR gv_date OBLIGATORY.
   SELECT-OPTIONS s_time FOR gv_time.
 SELECTION-SCREEN END OF BLOCK b_period.
 
 SELECTION-SCREEN BEGIN OF BLOCK b_limit WITH FRAME TITLE text-t03.
-  SELECTION-SCREEN COMMENT /1(79) gv_tip_rows_1.
-  SELECTION-SCREEN COMMENT /1(79) gv_tip_rows_2.
+  SELECTION-SCREEN COMMENT /1(79) gv_tipr1.
+  SELECTION-SCREEN COMMENT /1(79) gv_tipr2.
   PARAMETERS p_max TYPE i DEFAULT 10000.
 SELECTION-SCREEN END OF BLOCK b_limit.
 
@@ -34,10 +34,10 @@ SELECTION-SCREEN BEGIN OF BLOCK b_filter WITH FRAME TITLE text-t04.
 SELECTION-SCREEN END OF BLOCK b_filter.
 
 INITIALIZATION.
-  gv_tip_date_1 = 'Tip: Prefer a narrow date range (for example, one day or one week).'.
-  gv_tip_date_2 = 'Wider ranges read more change history and require more runtime and memory.'.
-  gv_tip_rows_1 = 'Tip: Max rows limits field-level ALV lines. Default: 10,000.'.
-  gv_tip_rows_2 = 'Raise it for larger extracts, or set 0 for no limit. A warning marks truncation.'.
+  gv_tipd1 = 'Tip: Prefer a narrow date range (for example, one day or one week).'.
+  gv_tipd2 = 'Wider ranges read more change history and require more runtime and memory.'.
+  gv_tipr1 = 'Tip: Max rows limits field-level ALV lines. Default: 10,000.'.
+  gv_tipr2 = 'Raise it for larger extracts, or set 0 for no limit. A warning marks truncation.'.
 
   APPEND VALUE #( sign = 'I' option = 'EQ' low = sy-datum ) TO s_date.
   APPEND VALUE #( sign = 'I' option = 'BT' low = '000000' high = '235959' ) TO s_time.
@@ -80,15 +80,24 @@ FORM execute_report.
   DATA lo_alv TYPE REF TO cl_salv_table.
   DATA lo_columns TYPE REF TO cl_salv_columns_table.
   DATA lv_title TYPE lvc_title.
+  DATA lt_date TYPE zcl_chglog_reader=>ty_date_range.
+  DATA lt_time TYPE zcl_chglog_reader=>ty_time_range.
+  DATA lt_user TYPE zcl_chglog_reader=>ty_user_range.
+  DATA lt_objectid TYPE zcl_chglog_reader=>ty_objectid_range.
+
+  lt_date = CORRESPONDING #( s_date[] ).
+  lt_time = CORRESPONDING #( s_time[] ).
+  lt_user = CORRESPONDING #( s_user[] ).
+  lt_objectid = CORRESPONDING #( s_objid[] ).
 
   CREATE OBJECT lo_reader.
   lo_reader->read(
     EXPORTING
-      iv_process   = p_proc
-      it_date      = s_date[]
-      it_time      = s_time[]
-      it_user      = s_user[]
-      it_objectid  = s_objid[]
+      iv_process   = CONV #( p_proc )
+      it_date      = lt_date
+      it_time      = lt_time
+      it_user      = lt_user
+      it_objectid  = lt_objectid
       iv_max_rows  = p_max
     IMPORTING
       et_result    = lt_result
